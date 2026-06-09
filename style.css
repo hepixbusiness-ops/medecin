@@ -1760,3 +1760,198 @@ em { font-style: italic; }
   transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(0,119,182,.4);
 }
+
+/* ================================================================
+   18. MOBILE — correctifs complets (≤ 768px)
+================================================================ */
+@media (max-width: 768px) {
+
+  /* --- Variables mobile --- */
+  :root { --nav-h: 64px; }
+
+  /* --- Padding sections --- */
+  .stats, .services, .why, .doctors, .testimonials,
+  .gallery, .process, .faq, .contact, .cta-final {
+    padding: 4rem 0;
+  }
+
+  /* --- Titres --- */
+  .section-title { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+
+  /* ---- NAV MOBILE ---- */
+  .nav__container { padding: 0 1.25rem; gap: 1rem; }
+
+  /* Masquer phone sur mobile, garder le burger */
+  .nav__actions { display: none !important; }
+  .nav__burger  { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; margin-left: auto; }
+
+  /* Menu mobile plein écran */
+  .nav__mobile {
+    position: fixed;
+    top: var(--nav-h);
+    left: 0; right: 0; bottom: 0;
+    background: var(--white);
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+    z-index: 99;
+    display: none;
+    flex-direction: column;
+  }
+  .nav__mobile.is-open { display: flex; }
+  .nav__mobile ul { display: flex; flex-direction: column; gap: .25rem; }
+  .nav__mobile a {
+    display: block;
+    padding: 1rem 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    color: var(--text);
+    min-height: 44px;
+  }
+  .nav__mobile a:hover, .nav__mobile a:active {
+    background: var(--off-white);
+    color: var(--blue);
+  }
+  .nav__mobile .btn--primary {
+    margin-top: 1.5rem;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 52px;
+  }
+
+  /* Ajout du tel dans le menu mobile */
+  .nav__mobile::after {
+    content: "+237 6 99 17 92 54";
+    display: block;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--off-white);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blue);
+    text-align: center;
+  }
+
+  /* Bloquer scroll body quand menu ouvert */
+  body.menu-open { overflow: hidden; }
+
+  /* ---- HERO MOBILE ---- */
+  .hero__container {
+    grid-template-columns: 1fr;
+    padding: calc(var(--nav-h) + 2rem) 1.25rem 3rem;
+    gap: 2rem;
+  }
+  .hero__title { font-size: clamp(1.9rem, 8vw, 2.8rem); }
+  .hero__subtitle { font-size: .95rem; margin-bottom: 1.75rem; }
+
+  .hero__actions { flex-direction: column; align-items: stretch; gap: .75rem; }
+  .hero__actions .btn { width: 100%; justify-content: center; min-height: 52px; font-size: 1rem; }
+
+  .hero__cards {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+  .hero__card { min-width: 0; flex: 1 1 calc(33% - .5rem); padding: 1rem; }
+  .hero__card-value { font-size: 1.3rem; }
+
+  .hero__trust { flex-wrap: wrap; }
+  .hero__scroll-hint { display: none; }
+
+  /* ---- STATS MOBILE ---- */
+  .stats__grid { grid-template-columns: repeat(2, 1fr); }
+  .stats__item { padding: 1.75rem 1rem; }
+  .stats__value { font-size: 2rem; }
+
+  /* ---- SERVICES MOBILE ---- */
+  .services__container, .doctors__container, .why__container,
+  .testimonials__container, .gallery__container, .process__container,
+  .faq__container, .contact__container { padding: 0 1.25rem; }
+
+  .services__grid { grid-template-columns: 1fr; gap: 1rem; }
+  .service-card { transform: none !important; } /* Désactiver tilt */
+
+  /* ---- WHY MOBILE ---- */
+  .why__container { grid-template-columns: 1fr; gap: 2.5rem; }
+  .why__float-cert { left: 0; bottom: 1rem; font-size: .85rem; padding: .75rem 1rem; }
+  .why__float-exp  { right: 0; top: 1rem; }
+  .why__float-num  { font-size: 1.8rem; }
+  .why__img-wrap img { max-height: 320px; object-fit: cover; object-position: top; }
+
+  /* ---- DOCTORS MOBILE ---- */
+  .doctors__grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  /* Toujours afficher le CTA sur mobile (pas de hover) */
+  .doctor-card__hover-cta {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(2,62,138,.75) 0%, transparent 55%);
+  }
+  .doctor-card__hover-cta a { padding: .5rem 1rem; font-size: .8rem; }
+
+  /* ---- TESTIMONIALS MOBILE ---- */
+  .testimonial { flex: 0 0 100%; }
+  .testimonials__controls { gap: 1rem; }
+
+  /* ---- GALLERY MOBILE ---- */
+  .gallery__grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+  }
+  .gallery__item--tall  { grid-row: span 1; aspect-ratio: 4/3; }
+  .gallery__item--wide  { grid-column: span 2; }
+  /* Labels toujours visibles sur mobile */
+  .gallery__label { transform: translateY(0); }
+
+  /* ---- PROCESS MOBILE ---- */
+  .process__steps { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 1rem; }
+  .process__connector { display: none; }
+  .process__step-desc { max-width: none; font-size: .8rem; }
+
+  /* ---- FAQ MOBILE ---- */
+  .faq__q { padding: 1rem 1.25rem; font-size: .9rem; }
+  .faq__a  { padding: 0 1.25rem 1rem; }
+
+  /* ---- CONTACT MOBILE ---- */
+  .contact__container { grid-template-columns: 1fr; gap: 2.5rem; }
+  .contact__form-wrap { padding: 1.5rem 1.25rem; border-radius: var(--radius); }
+  .contact__map { display: none; } /* Masquer carte sur mobile */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* ---- CTA FINAL MOBILE ---- */
+  .cta-final__inner { grid-template-columns: 1fr; }
+  .cta-final__visual { display: none; }
+  .cta-final__actions { flex-direction: column; align-items: stretch; }
+  .cta-final__actions .btn { width: 100%; justify-content: center; min-height: 52px; }
+
+  /* ---- FOOTER MOBILE ---- */
+  .footer__inner { padding: 0 1.25rem; }
+  .footer__top { gap: 2rem; padding: 3rem 0 2rem; }
+  .footer__cols { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+
+  /* ---- BACK TO TOP ---- */
+  .back-top { bottom: 1.25rem; right: 1.25rem; width: 44px; height: 44px; }
+
+  /* ---- TAILLE TACTILE MINIMUM 44px ---- */
+  .btn--sm { min-height: 44px; padding: .65rem 1.25rem; }
+  .btn--lg { min-height: 52px; }
+  .service-card__cta { min-height: 44px; }
+  .testimonials__arrow { width: 48px; height: 48px; }
+  .faq__q { min-height: 56px; }
+}
+
+/* ---- Très petits écrans (≤ 400px) ---- */
+@media (max-width: 400px) {
+  .hero__cards { flex-direction: column; align-items: center; }
+  .hero__card  { width: 100%; flex: none; }
+  .stats__grid { grid-template-columns: 1fr; }
+  .doctors__grid { grid-template-columns: 1fr; }
+  .process__steps { grid-template-columns: 1fr; }
+  .footer__cols  { grid-template-columns: 1fr; }
+  .gallery__grid { grid-template-columns: 1fr; }
+  .gallery__item--wide { grid-column: span 1; }
+  .cta-final__title { font-size: 1.5rem; }
+}

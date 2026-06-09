@@ -19,21 +19,30 @@
   onScroll();
 
   /* Burger toggle */
+  const closeMobileMenu = () => {
+    burger.classList.remove('is-open');
+    burger.setAttribute('aria-expanded', false);
+    mobileMenu.classList.remove('is-open');
+    mobileMenu.setAttribute('aria-hidden', true);
+    document.body.classList.remove('menu-open'); /* Déverrouille le scroll */
+  };
+
   burger.addEventListener('click', () => {
     const open = burger.classList.toggle('is-open');
     burger.setAttribute('aria-expanded', open);
     mobileMenu.classList.toggle('is-open', open);
     mobileMenu.setAttribute('aria-hidden', !open);
+    document.body.classList.toggle('menu-open', open); /* Verrouille le scroll */
   });
 
   /* Close mobile menu on link click */
   mobileMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      burger.classList.remove('is-open');
-      burger.setAttribute('aria-expanded', false);
-      mobileMenu.classList.remove('is-open');
-      mobileMenu.setAttribute('aria-hidden', true);
-    });
+    link.addEventListener('click', closeMobileMenu);
+  });
+
+  /* Close mobile menu on Escape */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMobileMenu();
   });
 
   /* Smooth scroll for all anchor links */
@@ -61,7 +70,11 @@
   const close = () => { item.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); };
   const toggle = () => item.classList.contains('is-open') ? close() : open();
 
-  btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.innerWidth < 900) return; /* Ignoré sur mobile */
+    toggle();
+  });
 
   /* Fermer en cliquant ailleurs */
   document.addEventListener('click', (e) => {
@@ -458,10 +471,11 @@ backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smo
 })();
 
 /* ================================================================
-   9. PARALLAX SUBTLE — hero image
+   9. PARALLAX SUBTLE — hero image (desktop uniquement)
 ================================================================ */
 (function initParallax() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.innerWidth < 768) return; /* Désactivé sur mobile */
   const heroImg = document.querySelector('.hero__bg-img');
   if (!heroImg) return;
 
