@@ -1762,7 +1762,23 @@ em { font-style: italic; }
 }
 
 /* ================================================================
-   18. MOBILE — correctifs complets (≤ 768px)
+   18. CORRECTIFS TACTILES — tous appareils (boutons, liens)
+================================================================ */
+
+/* Suppression du délai tactile 300ms sur iOS/Android */
+a, button, [role="button"], input, select, textarea, label,
+.faq__q, .nav__burger, .back-top, .testimonials__arrow,
+.gallery__item, .testimonials__dot {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Curseur pointer sur tous les éléments cliquables */
+button, [role="button"], .faq__q, .testimonials__arrow,
+.testimonials__dot, .gallery__item, .back-top { cursor: pointer; }
+
+/* ================================================================
+   19. MOBILE — correctifs complets (≤ 768px)
 ================================================================ */
 @media (max-width: 768px) {
 
@@ -1783,61 +1799,84 @@ em { font-style: italic; }
 
   /* Masquer phone sur mobile, garder le burger */
   .nav__actions { display: none !important; }
-  .nav__burger  { display: flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; margin-left: auto; }
+  .nav__burger  {
+    display: flex;
+    min-width: 48px; min-height: 48px;
+    align-items: center; justify-content: center;
+    margin-left: auto;
+    padding: 12px;
+  }
 
-  /* Menu mobile plein écran */
+  /* ---- MENU MOBILE (panneau sous la barre de nav) ---- */
+  /* NB: le menu est DANS le nav (position:fixed z-index:100)
+     donc il hérite du bon empilement — on n'utilise PAS
+     position:fixed ici pour éviter les conflits de contexte */
   .nav__mobile {
+    /* override les styles existants */
     position: fixed;
     top: var(--nav-h);
     left: 0; right: 0; bottom: 0;
-    background: var(--white);
-    padding: 2rem 1.5rem;
+    z-index: 9999;          /* au-dessus de TOUT */
+    background: #fff;
+    padding: 1.5rem 1.25rem 2rem;
     overflow-y: auto;
-    z-index: 99;
-    display: none;
+    -webkit-overflow-scrolling: touch;
+    display: none !important;
     flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
   }
-  .nav__mobile.is-open { display: flex; }
-  .nav__mobile ul { display: flex; flex-direction: column; gap: .25rem; }
-  .nav__mobile a {
-    display: block;
+  .nav__mobile.is-open {
+    display: flex !important;
+  }
+  .nav__mobile ul {
+    display: flex; flex-direction: column; gap: .25rem;
+    list-style: none; padding: 0; margin: 0;
+  }
+  .nav__mobile li a {
+    display: flex;
+    align-items: center;
     padding: 1rem 1.25rem;
     font-size: 1.1rem;
     font-weight: 600;
     border-radius: 10px;
-    color: var(--text);
-    min-height: 44px;
+    color: #1a2233;
+    min-height: 52px;
+    text-decoration: none;
+    transition: background .15s;
   }
-  .nav__mobile a:hover, .nav__mobile a:active {
-    background: var(--off-white);
-    color: var(--blue);
+  .nav__mobile li a:active,
+  .nav__mobile li a:hover {
+    background: #f0f4fa;
+    color: #0077b6;
   }
   .nav__mobile .btn--primary {
+    display: flex !important;
     margin-top: 1.5rem;
     width: 100%;
-    text-align: center;
     justify-content: center;
-    padding: 1rem;
+    align-items: center;
+    padding: 1rem 1.5rem;
     font-size: 1rem;
     min-height: 52px;
+    border-radius: 10px;
   }
 
-  /* Ajout du tel dans le menu mobile */
+  /* Numéro de téléphone dans le menu */
   .nav__mobile::after {
-    content: "+237 6 99 17 92 54";
+    content: "📞  +237 6 99 17 92 54";
     display: block;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
     padding: 1rem 1.25rem;
-    background: var(--off-white);
+    background: #eaf4fb;
     border-radius: 10px;
-    font-size: 1rem;
+    font-size: .95rem;
     font-weight: 700;
-    color: var(--blue);
+    color: #0077b6;
     text-align: center;
   }
 
   /* Bloquer scroll body quand menu ouvert */
-  body.menu-open { overflow: hidden; }
+  body.menu-open { overflow: hidden; position: relative; }
 
   /* ---- HERO MOBILE ---- */
   .hero__container {
