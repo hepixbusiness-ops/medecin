@@ -116,8 +116,12 @@ backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smo
   if (!counters.length) return;
 
   const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const animated = new Set();
 
   const animateCounter = (el) => {
+    if (animated.has(el)) return;
+    animated.add(el);
+
     const target   = parseInt(el.dataset.counter);
     const suffix   = el.dataset.suffix || '';
     const formatted = el.dataset.formatted === 'true';
@@ -135,15 +139,26 @@ backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smo
     requestAnimationFrame(tick);
   };
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      animateCounter(entry.target);
-      observer.unobserve(entry.target);
-    });
-  }, { threshold: 0.2 });
+  /* Vérifie si un élément est dans le viewport */
+  const isInViewport = (el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.top < window.innerHeight && rect.bottom > 0;
+  };
 
-  counters.forEach(el => observer.observe(el));
+  /* Déclenche les compteurs visibles */
+  const checkCounters = () => {
+    counters.forEach(el => {
+      if (isInViewport(el)) animateCounter(el);
+    });
+  };
+
+  /* Vérification au chargement + au scroll */
+  window.addEventListener('scroll', checkCounters, { passive: true });
+
+  /* Lancer immédiatement + après 300ms (images qui décalent le layout) */
+  checkCounters();
+  setTimeout(checkCounters, 300);
+  setTimeout(checkCounters, 800);
 })();
 
 /* ================================================================
