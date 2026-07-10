@@ -347,7 +347,7 @@ function initBackToTop() {
 ================================================================ */
 function initImageFallback() {
   const icon = encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff8c3a" stroke-width="1.3"><path d="M4 20V10l8-6 8 6v10M9 20v-6h6v6"/></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23d1a565" stroke-width="1.3"><path d="M4 20V10l8-6 8 6v10M9 20v-6h6v6"/></svg>'
   );
   const placeholder = `data:image/svg+xml,${icon}`;
 
