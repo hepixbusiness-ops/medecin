@@ -35,6 +35,29 @@ export async function getRecentThemeKeys(limit = 7): Promise<string[]> {
 }
 
 /**
+ * Renvoie les `limit` derniers image_ref publiés avec succès. Sert au mode
+ * IMAGE_PROVIDER=banque pour éviter de repiocher une image récente.
+ */
+export async function getRecentImageRefs(limit = 7): Promise<string[]> {
+  const supabase = getSupabaseClient();
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("image_ref")
+    .eq("status", "success")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Lecture de l'historique des images impossible : ${error.message}`);
+  }
+
+  return (data ?? [])
+    .map((row) => row.image_ref as string | null)
+    .filter((ref): ref is string => Boolean(ref));
+}
+
+/**
  * Vérifie si une publication a déjà réussi aujourd'hui (jour UTC), pour
  * garantir qu'on ne publie jamais deux fois le même jour.
  */
