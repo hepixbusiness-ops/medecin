@@ -1,6 +1,4 @@
-import { getSupabaseClient } from "./supabase";
-
-const TABLE = "facebook_posts";
+import { airtableRequest } from "./airtable";
 
 export type PostStatus = "success" | "error";
 
@@ -13,25 +11,49 @@ export interface PostAttempt {
   error?: string | null;
 }
 
+interface AirtableFields {
+  "Theme Key"?: string;
+  Description?: string;
+  "Image Ref"?: string;
+  "FB Post ID"?: string;
+  Status?: PostStatus;
+  Error?: string;
+  "Published At"?: string;
+}
+
+interface AirtableRecord {
+  id: string;
+  fields: AirtableFields;
+}
+
+interface AirtableListResponse {
+  records: AirtableRecord[];
+}
+
+function buildQuery(params: Record<string, string>): string {
+  const query = new URLSearchParams(params).toString();
+  return query ? `?${query}` : "";
+}
+
+async function fetchRecentSuccess(limit: number): Promise<AirtableRecord[]> {
+  const query = buildQuery({
+    maxRecords: String(limit),
+    "sort[0][field]": "Published At",
+    "sort[0][direction]": "desc",
+    filterByFormula: '{Status}="success"',
+  });
+
+  const data = await airtableRequest<AirtableListResponse>(query);
+  return data.records;
+}
+
 /**
  * Renvoie les `limit` derniers theme_key publiés avec succès, du plus récent
  * au plus ancien. Sert de base à la rotation sans répétition récente.
  */
 export async function getRecentThemeKeys(limit = 7): Promise<string[]> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("theme_key")
-    .eq("status", "success")
-    .order("published_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw new Error(`Lecture de l'historique Supabase impossible : ${error.message}`);
-  }
-
-  return (data ?? []).map((row) => row.theme_key as string);
+  const records = await fetchRecentSuccess(limit);
+  return records.map((r) => r.fields["Theme Key"]).filter((v): v is string => Boolean(v));
 }
 
 /**
@@ -39,22 +61,8 @@ export async function getRecentThemeKeys(limit = 7): Promise<string[]> {
  * IMAGE_PROVIDER=banque pour éviter de repiocher une image récente.
  */
 export async function getRecentImageRefs(limit = 7): Promise<string[]> {
-  const supabase = getSupabaseClient();
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("image_ref")
-    .eq("status", "success")
-    .order("published_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    throw new Error(`Lecture de l'historique des images impossible : ${error.message}`);
-  }
-
-  return (data ?? [])
-    .map((row) => row.image_ref as string | null)
-    .filter((ref): ref is string => Boolean(ref));
+  const records = await fetchRecentSuccess(limit);
+  return records.map((r) => r.fields["Image Ref"]).filter((v): v is string => Boolean(v));
 }
 
 /**
@@ -62,41 +70,33 @@ export async function getRecentImageRefs(limit = 7): Promise<string[]> {
  * garantir qu'on ne publie jamais deux fois le même jour.
  */
 export async function hasPublishedToday(): Promise<boolean> {
-  const supabase = getSupabaseClient();
+  const [last] = await fetchRecentSuccess(1);
+  const publishedAt = last?.fields["Published At"];
+  if (!publishedAt) return false;
 
   const startOfDayUtc = new Date();
   startOfDayUtc.setUTCHours(0, 0, 0, 0);
 
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("id")
-    .eq("status", "success")
-    .gte("published_at", startOfDayUtc.toISOString())
-    .limit(1);
-
-  if (error) {
-    throw new Error(`Vérification de publication du jour impossible : ${error.message}`);
-  }
-
-  return (data ?? []).length > 0;
+  return new Date(publishedAt).getTime() >= startOfDayUtc.getTime();
 }
 
 /**
  * Enregistre une tentative de publication (succès ou échec) dans l'historique.
  */
 export async function recordAttempt(attempt: PostAttempt): Promise<void> {
-  const supabase = getSupabaseClient();
+  const fields: AirtableFields = {
+    "Theme Key": attempt.themeKey,
+    Status: attempt.status,
+    "Published At": new Date().toISOString(),
+  };
 
-  const { error } = await supabase.from(TABLE).insert({
-    theme_key: attempt.themeKey,
-    description: attempt.description ?? null,
-    image_ref: attempt.imageRef ?? null,
-    fb_post_id: attempt.fbPostId ?? null,
-    status: attempt.status,
-    error: attempt.error ?? null,
+  if (attempt.description) fields.Description = attempt.description;
+  if (attempt.imageRef) fields["Image Ref"] = attempt.imageRef;
+  if (attempt.fbPostId) fields["FB Post ID"] = attempt.fbPostId;
+  if (attempt.error) fields.Error = attempt.error;
+
+  await airtableRequest("", {
+    method: "POST",
+    body: JSON.stringify({ records: [{ fields }] }),
   });
-
-  if (error) {
-    throw new Error(`Enregistrement de l'historique Supabase impossible : ${error.message}`);
-  }
 }
