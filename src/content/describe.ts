@@ -1,4 +1,6 @@
-import { THEMES, CTA, Theme } from "./themes";
+import { METIERS, Metier } from "./metiers";
+import { TYPES_CONTENU, TypeContenu } from "./typesContenu";
+import { buildTheme, buildCta } from "./themes";
 import { getRecentThemeKeys } from "../store/history";
 
 export interface DailyContent {
@@ -25,88 +27,84 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)] as T;
 }
 
-function shuffle<T>(items: T[]): T[] {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = arr[i] as T;
-    arr[i] = arr[j] as T;
-    arr[j] = temp;
-  }
-  return arr;
+function parseMetierKey(themeKey: string): string {
+  return themeKey.split("__")[0] ?? themeKey;
+}
+
+function parseTypeKey(themeKey: string): string {
+  return themeKey.split("__")[1] ?? "";
 }
 
 /**
- * Choisit un thème en évitant les `RECENT_WINDOW` derniers thèmes publiés
- * avec succès (rotation sans répétition récente), ainsi que les thèmes déjà
- * choisis dans le run en cours (`excludeKeys`, utile quand plusieurs posts
- * sont générés le même jour, avant même leur enregistrement dans l'historique).
+ * Choisit le métier du jour, en évitant les métiers déjà ciblés lors des
+ * `RECENT_WINDOW` dernières publications réussies. Un seul métier est choisi
+ * par jour ; les publications du jour varient ensuite par type de contenu.
  */
-export async function selectDailyTheme(excludeKeys: string[] = []): Promise<Theme> {
+export async function selectMetierDuJour(): Promise<Metier> {
   const recentKeys = await getRecentThemeKeys(RECENT_WINDOW);
-  const excluded = new Set([...recentKeys, ...excludeKeys]);
+  const recentMetierKeys = new Set(recentKeys.map(parseMetierKey));
 
-  let candidates = THEMES.filter((theme) => !excluded.has(theme.key));
-
-  if (candidates.length === 0) {
-    candidates = THEMES.filter((theme) => !excludeKeys.includes(theme.key));
-  }
-  if (candidates.length === 0) {
-    candidates = THEMES;
-  }
+  let candidates = METIERS.filter((m) => !recentMetierKeys.has(m.key));
+  if (candidates.length === 0) candidates = METIERS;
 
   return pickRandom(candidates);
 }
 
-function splitHashtagLine(text: string): [string, string | undefined] {
-  const lines = text.split("\n");
-  const lastLine = lines[lines.length - 1] ?? "";
-  if (lastLine.trim().startsWith("#")) {
-    return [lines.slice(0, -1).join("\n"), lastLine];
+/**
+ * Choisit un type de contenu pour le métier du jour, en évitant les types
+ * déjà utilisés récemment pour ce métier ainsi que ceux déjà utilisés plus
+ * tôt dans le run en cours (`excludeTypeKeys`).
+ */
+export async function selectTypeContenu(
+  metier: Metier,
+  excludeTypeKeys: string[] = []
+): Promise<TypeContenu> {
+  const recentKeys = await getRecentThemeKeys(RECENT_WINDOW);
+  const recentTypeKeysForMetier = new Set(
+    recentKeys.filter((k) => parseMetierKey(k) === metier.key).map(parseTypeKey)
+  );
+  const excluded = new Set([...recentTypeKeysForMetier, ...excludeTypeKeys]);
+
+  let candidates = TYPES_CONTENU.filter((t) => !excluded.has(t.key));
+  if (candidates.length === 0) {
+    candidates = TYPES_CONTENU.filter((t) => !excludeTypeKeys.includes(t.key));
   }
-  return [text, undefined];
+  if (candidates.length === 0) candidates = TYPES_CONTENU;
+
+  return pickRandom(candidates);
 }
 
-/** Remplit le gabarit avec le CTA et mélange l'ordre des hashtags secondaires (léger effet de variation). */
-function fillCaptionTemplate(theme: Theme): string {
-  const filled = theme.gabaritLegende.replace("{CTA}", CTA);
-  const [body, hashtagLine] = splitHashtagLine(filled);
-  if (!hashtagLine) return filled;
-
-  const [brandTag, ...otherTags] = hashtagLine.trim().split(/\s+/);
-  const reordered = [brandTag, ...shuffle(otherTags)].join(" ");
-  return `${body}\n${reordered}`;
-}
-
-function buildTemplateContent(theme: Theme): { descriptionImage: string; legende: string } {
-  const variant = pickRandom(IMAGE_STYLE_VARIANTS);
-  const descriptionImage = `${theme.promptImage} Variation du jour : ${variant}.`;
-  const legende = fillCaptionTemplate(theme);
-  return { descriptionImage, legende };
-}
-
-async function buildAiContent(theme: Theme): Promise<{ descriptionImage: string; legende: string }> {
+async function buildAiContent(
+  metier: Metier,
+  type: TypeContenu,
+  angle: string,
+  secteur: string
+): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("CONTENT_MODE=ai requiert la variable d'environnement ANTHROPIC_API_KEY.");
   }
 
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
+  const ctaLine = buildCta();
 
   const systemPrompt = [
-    "Tu rédiges des légendes Facebook en français pour ProRDV, une application camerounaise de réservation en ligne pour établissements (coiffure, spa, restaurant, fitness, hôtel, santé).",
+    "Tu rédiges des légendes Facebook en français pour ProRDV, une application camerounaise de réservation en ligne pour professionnels sur rendez-vous.",
+    `Type de publication demandé : "${type.nom}".`,
     "Consignes strictes :",
     "- Français uniquement, ton chaleureux et professionnel.",
     "- 2 à 3 emojis maximum, jamais plus.",
-    `- Inclure explicitement l'appel à l'action : "${CTA}".`,
+    `- Inclure explicitement l'appel à l'action : "${ctaLine}".`,
     "- Terminer par 4 à 6 hashtags pertinents incluant toujours #ProRDV et #Cameroun.",
     "- Réponds uniquement avec le texte final de la légende, sans introduction ni commentaire.",
   ].join("\n");
 
   const userPrompt = [
-    `Angle commercial du jour : ${theme.angle}`,
-    `Secteur ciblé : ${theme.secteur}`,
-    "Rédige une légende Facebook originale et naturelle à partir de cet angle.",
+    `Angle commercial du jour : ${angle}`,
+    `Secteur ciblé : ${secteur}`,
+    `Douleur du métier à adresser : ${metier.douleur}`,
+    `Bénéfice ProRDV à mettre en avant : ${metier.beneficeCle}`,
+    `Rédige une légende Facebook originale et naturelle, dans le style "${type.nom}", à partir de ces éléments.`,
   ].join("\n");
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -118,7 +116,7 @@ async function buildAiContent(theme: Theme): Promise<{ descriptionImage: string;
     },
     body: JSON.stringify({
       model,
-      max_tokens: 400,
+      max_tokens: 500,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     }),
@@ -138,23 +136,24 @@ async function buildAiContent(theme: Theme): Promise<{ descriptionImage: string;
     throw new Error("Réponse de l'API Anthropic vide ou invalide.");
   }
 
-  const variant = pickRandom(IMAGE_STYLE_VARIANTS);
-  const descriptionImage = `${theme.promptImage} Variation du jour : ${variant}.`;
-
-  return { descriptionImage, legende };
+  return legende;
 }
 
 /**
- * Sélectionne un thème puis génère la description d'image et la légende
- * finale, selon CONTENT_MODE ("template" par défaut, ou "ai"). `excludeKeys`
- * permet d'éviter les thèmes déjà utilisés plus tôt dans le run en cours.
+ * Génère la description d'image et la légende finale pour un (métier, type
+ * de contenu) donnés, selon CONTENT_MODE ("template" par défaut, ou "ai").
  */
-export async function describeToday(excludeKeys: string[] = []): Promise<DailyContent> {
-  const theme = await selectDailyTheme(excludeKeys);
+export async function describePost(metier: Metier, type: TypeContenu): Promise<DailyContent> {
+  const theme = buildTheme(metier, type);
   const mode = (process.env.CONTENT_MODE || "template").toLowerCase();
 
-  const { descriptionImage, legende } =
-    mode === "ai" ? await buildAiContent(theme) : buildTemplateContent(theme);
+  const variant = pickRandom(IMAGE_STYLE_VARIANTS);
+  const descriptionImage = `${theme.promptImage} Variation du jour : ${variant}.`;
 
-  return { themeKey: theme.key, descriptionImage, legende };
+  if (mode === "ai") {
+    const legende = await buildAiContent(metier, type, theme.angle, theme.secteur);
+    return { themeKey: theme.key, descriptionImage, legende };
+  }
+
+  return { themeKey: theme.key, descriptionImage, legende: theme.gabaritLegende };
 }

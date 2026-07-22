@@ -1,30 +1,38 @@
 import { config } from "dotenv";
 config();
 
-import { describeToday } from "./content/describe";
+import { selectMetierDuJour, selectTypeContenu, describePost } from "./content/describe";
+import { Metier } from "./content/metiers";
 import { generateDailyImage } from "./image/generate";
 import { validatePageToken } from "./facebook/token";
 import { publishPost } from "./facebook/publish";
 import { countPublishedToday, recordAttempt } from "./store/history";
 import { alertFailure } from "./notify/alert";
 
-/** Nombre de publications Facebook générées par jour. */
+/** Nombre de publications Facebook générées par jour (même métier, types de contenu différents). */
 const POSTS_PER_DAY = 3;
 
 function log(message: string): void {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
-/** Génère et publie un post (thème + image + légende). Renvoie true en cas de succès. */
-async function publishOne(index: number, total: number, usedThemeKeys: string[]): Promise<boolean> {
+/** Génère et publie un post (type de contenu + image + légende) pour le métier du jour. */
+async function publishOne(
+  index: number,
+  total: number,
+  metier: Metier,
+  usedTypeKeys: string[]
+): Promise<boolean> {
   let themeKey: string | null = null;
 
   try {
-    log(`[${index}/${total}] Sélection du thème et génération de la description...`);
-    const daily = await describeToday(usedThemeKeys);
+    log(`[${index}/${total}] Sélection du type de contenu et génération de la description...`);
+    const type = await selectTypeContenu(metier, usedTypeKeys);
+    usedTypeKeys.push(type.key);
+
+    const daily = await describePost(metier, type);
     themeKey = daily.themeKey;
-    usedThemeKeys.push(themeKey);
-    log(`[${index}/${total}] Thème sélectionné : ${themeKey}`);
+    log(`[${index}/${total}] Publication : ${metier.nom} / ${type.nom} (${themeKey})`);
 
     log(`[${index}/${total}] Génération de l'image...`);
     const image = await generateDailyImage(daily.descriptionImage, themeKey);
@@ -74,12 +82,18 @@ async function publishOne(index: number, total: number, usedThemeKeys: string[])
 
 async function runDryRun(): Promise<void> {
   log(`--dry-run activé : génération de ${POSTS_PER_DAY} description(s)/image(s), sans publication.`);
-  const usedThemeKeys: string[] = [];
+
+  const metier = await selectMetierDuJour();
+  log(`Métier du jour : ${metier.nom}`);
+
+  const usedTypeKeys: string[] = [];
 
   for (let i = 1; i <= POSTS_PER_DAY; i++) {
-    const daily = await describeToday(usedThemeKeys);
-    usedThemeKeys.push(daily.themeKey);
-    log(`[${i}/${POSTS_PER_DAY}] Thème : ${daily.themeKey}`);
+    const type = await selectTypeContenu(metier, usedTypeKeys);
+    usedTypeKeys.push(type.key);
+
+    const daily = await describePost(metier, type);
+    log(`[${i}/${POSTS_PER_DAY}] Type de contenu : ${type.nom} (${daily.themeKey})`);
 
     const image = await generateDailyImage(daily.descriptionImage, daily.themeKey);
     console.log(`--- [${i}/${POSTS_PER_DAY}] Légende ---\n${daily.legende}\n`);
@@ -117,11 +131,14 @@ async function main(): Promise<void> {
 
   log(`${alreadyPublished}/${POSTS_PER_DAY} déjà publiée(s) aujourd'hui, ${remaining} restante(s) à générer.`);
 
-  const usedThemeKeys: string[] = [];
+  const metier = await selectMetierDuJour();
+  log(`Métier du jour : ${metier.nom}`);
+
+  const usedTypeKeys: string[] = [];
   let hasFailure = false;
 
   for (let i = alreadyPublished + 1; i <= POSTS_PER_DAY; i++) {
-    const success = await publishOne(i, POSTS_PER_DAY, usedThemeKeys);
+    const success = await publishOne(i, POSTS_PER_DAY, metier, usedTypeKeys);
     if (!success) hasFailure = true;
   }
 
