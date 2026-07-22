@@ -143,7 +143,8 @@ Table `Facebook Posts` (nom configurable via `AIRTABLE_TABLE_NAME`) :
 | Champ | Type Airtable |
 |---|---|
 | Theme Key | Texte sur une ligne |
-| Description | Texte long |
+| Description | Texte long (prompt de génération d'image, pas la légende) |
+| Legende | Texte long (texte exact publié en légende Facebook) |
 | Image Ref | Texte sur une ligne |
 | FB Post ID | Texte sur une ligne |
 | Status | Texte sur une ligne ou Single select (`success` / `error`) |
