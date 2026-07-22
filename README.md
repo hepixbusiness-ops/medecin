@@ -25,8 +25,10 @@ une légende en français, avec rotation des thèmes sans répétition récente.
 ```
 /src
   /content
-    themes.ts        → banque de 14 thèmes rotatifs
-    describe.ts       → sélection du thème du jour + description/légende
+    metiers.ts        → banque de 22 métiers ciblés (douleur/bénéfice/visuel)
+    typesContenu.ts    → banque de 24 types de contenu (astuce, témoignage, chiffre...)
+    themes.ts           → buildTheme(metier, type) : construit une publication à la demande
+    describe.ts          → sélection du métier du jour + du type de contenu par post
   /image
     generate.ts       → génération/sélection de l'image du jour
   /facebook
@@ -132,9 +134,19 @@ Pour générer les images par IA à la place :
 
 ### 4. Légendes par IA (optionnel)
 
-Par défaut (`CONTENT_MODE=template`), les légendes sont générées localement à
-partir des gabarits de `themes.ts`, gratuitement. Pour des légendes rédigées
-par IA : `CONTENT_MODE=ai` + `ANTHROPIC_API_KEY`.
+Par défaut (`CONTENT_MODE=template`), les légendes sont générées localement en
+combinant un métier (`metiers.ts`) et un type de contenu (`typesContenu.ts`),
+gratuitement. Pour des légendes rédigées par IA (Anthropic) à partir des mêmes
+métier/type/douleur/bénéfice : `CONTENT_MODE=ai` + `ANTHROPIC_API_KEY`.
+
+### Rotation du contenu
+
+Chaque jour, un seul **métier** est ciblé pour les 3 publications du jour (en
+évitant les métiers ciblés récemment). Chaque publication du jour utilise un
+**type de contenu** différent (astuce, témoignage, chiffre, avant/après...),
+ce qui donne 22 métiers × 24 types = plus de 500 combinaisons possibles, sans
+texte répété. Le CTA et les hashtags sont eux aussi tirés aléatoirement à
+chaque publication parmi plusieurs variantes.
 
 ## Structure de la table Airtable
 
