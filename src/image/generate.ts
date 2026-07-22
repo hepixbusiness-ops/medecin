@@ -130,7 +130,7 @@ async function pickFromBanque(): Promise<GeneratedImage> {
     candidates = files;
   }
 
-  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)] as string;
   return { type: "file", value: path.join(BANQUE_DIR, chosen) };
 }
 

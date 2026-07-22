@@ -19,14 +19,19 @@ const IMAGE_STYLE_VARIANTS = [
 ];
 
 function pickRandom<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)];
+  if (items.length === 0) {
+    throw new Error("pickRandom: la liste fournie est vide.");
+  }
+  return items[Math.floor(Math.random() * items.length)] as T;
 }
 
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    const temp = arr[i] as T;
+    arr[i] = arr[j] as T;
+    arr[j] = temp;
   }
   return arr;
 }
@@ -49,7 +54,7 @@ export async function selectDailyTheme(): Promise<Theme> {
 
 function splitHashtagLine(text: string): [string, string | undefined] {
   const lines = text.split("\n");
-  const lastLine = lines[lines.length - 1];
+  const lastLine = lines[lines.length - 1] ?? "";
   if (lastLine.trim().startsWith("#")) {
     return [lines.slice(0, -1).join("\n"), lastLine];
   }

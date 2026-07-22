@@ -1,0 +1,26 @@
+{
+  "name": "prordv-facebook-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agent IA autonome qui publie automatiquement sur la Page Facebook ProRDV, une fois par jour.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "post": "node dist/index.js",
+    "post:dry-run": "node dist/index.js --dry-run",
+    "dev:post": "ts-node src/index.ts",
+    "dev:post:dry-run": "ts-node src/index.ts --dry-run"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
