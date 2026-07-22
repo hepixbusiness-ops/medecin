@@ -5,6 +5,7 @@ export type PostStatus = "success" | "error";
 export interface PostAttempt {
   themeKey: string;
   description?: string | null;
+  legende?: string | null;
   imageRef?: string | null;
   fbPostId?: string | null;
   status: PostStatus;
@@ -14,6 +15,7 @@ export interface PostAttempt {
 interface AirtableFields {
   "Theme Key"?: string;
   Description?: string;
+  Legende?: string;
   "Image Ref"?: string;
   "FB Post ID"?: string;
   Status?: PostStatus;
@@ -92,6 +94,7 @@ export async function recordAttempt(attempt: PostAttempt): Promise<void> {
   };
 
   if (attempt.description) fields.Description = attempt.description;
+  if (attempt.legende) fields.Legende = attempt.legende;
   if (attempt.imageRef) fields["Image Ref"] = attempt.imageRef;
   if (attempt.fbPostId) fields["FB Post ID"] = attempt.fbPostId;
   if (attempt.error) fields.Error = attempt.error;

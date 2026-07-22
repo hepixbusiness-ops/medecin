@@ -37,6 +37,7 @@ async function publishOne(index: number, total: number, usedThemeKeys: string[])
     await recordAttempt({
       themeKey,
       description: daily.descriptionImage,
+      legende: daily.legende,
       imageRef: image.value,
       fbPostId,
       status: "success",
