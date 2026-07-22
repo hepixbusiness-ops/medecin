@@ -22,8 +22,15 @@ function graphVersion(): string {
 
 /**
  * Valide FB_PAGE_ACCESS_TOKEN via l'endpoint debug_token de la Graph API.
- * Échoue avec un message clair si le token est absent, invalide, expiré ou
- * sans la permission pages_manage_posts requise pour publier.
+ * Échoue avec un message clair si le token est absent, invalide ou expiré.
+ *
+ * Ne bloque plus sur l'absence du scope OAuth "pages_manage_posts" dans
+ * `scopes` : pour un token de Page dérivé d'un utilisateur système Business
+ * Manager, le droit de publier est gouverné par les tâches assignées sur la
+ * Page (ex. CREATE_CONTENT/MANAGE), pas par ce scope classique — qui peut
+ * être absent de la réponse debug_token même quand la publication fonctionne.
+ * On se contente d'avertir, et on laisse le véritable appel de publication
+ * (facebook/publish.ts) faire foi.
  */
 export async function validatePageToken(): Promise<PageTokenInfo> {
   const token = requireEnv("FB_PAGE_ACCESS_TOKEN");
@@ -54,8 +61,10 @@ export async function validatePageToken(): Promise<PageTokenInfo> {
   }
 
   if (!info.scopes?.includes("pages_manage_posts")) {
-    throw new Error(
-      "FB_PAGE_ACCESS_TOKEN n'a pas la permission pages_manage_posts, requise pour publier sur la Page."
+    console.warn(
+      "[facebook] Avertissement : pages_manage_posts absent des scopes OAuth du token. " +
+        "Si le token provient d'un utilisateur système Business Manager avec la tâche CREATE_CONTENT/MANAGE " +
+        "sur la Page, la publication peut fonctionner malgré tout — on continue."
     );
   }
 
