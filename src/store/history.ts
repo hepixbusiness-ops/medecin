@@ -66,18 +66,19 @@ export async function getRecentImageRefs(limit = 7): Promise<string[]> {
 }
 
 /**
- * Vérifie si une publication a déjà réussi aujourd'hui (jour UTC), pour
- * garantir qu'on ne publie jamais deux fois le même jour.
+ * Compte le nombre de publications réussies aujourd'hui (jour UTC), pour
+ * garantir qu'on ne dépasse jamais le quota quotidien de publications.
  */
-export async function hasPublishedToday(): Promise<boolean> {
-  const [last] = await fetchRecentSuccess(1);
-  const publishedAt = last?.fields["Published At"];
-  if (!publishedAt) return false;
-
+export async function countPublishedToday(): Promise<number> {
+  const records = await fetchRecentSuccess(20);
   const startOfDayUtc = new Date();
   startOfDayUtc.setUTCHours(0, 0, 0, 0);
+  const startMs = startOfDayUtc.getTime();
 
-  return new Date(publishedAt).getTime() >= startOfDayUtc.getTime();
+  return records.filter((record) => {
+    const publishedAt = record.fields["Published At"];
+    return publishedAt ? new Date(publishedAt).getTime() >= startMs : false;
+  }).length;
 }
 
 /**

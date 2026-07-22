@@ -37,16 +37,22 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 /**
- * Choisit le thème du jour en évitant les `RECENT_WINDOW` derniers thèmes
- * publiés avec succès (rotation sans répétition récente).
+ * Choisit un thème en évitant les `RECENT_WINDOW` derniers thèmes publiés
+ * avec succès (rotation sans répétition récente), ainsi que les thèmes déjà
+ * choisis dans le run en cours (`excludeKeys`, utile quand plusieurs posts
+ * sont générés le même jour, avant même leur enregistrement dans l'historique).
  */
-export async function selectDailyTheme(): Promise<Theme> {
+export async function selectDailyTheme(excludeKeys: string[] = []): Promise<Theme> {
   const recentKeys = await getRecentThemeKeys(RECENT_WINDOW);
-  let candidates = THEMES.filter((theme) => !recentKeys.includes(theme.key));
+  const excluded = new Set([...recentKeys, ...excludeKeys]);
+
+  let candidates = THEMES.filter((theme) => !excluded.has(theme.key));
 
   if (candidates.length === 0) {
-    const lastKey = recentKeys[0];
-    candidates = THEMES.filter((theme) => theme.key !== lastKey);
+    candidates = THEMES.filter((theme) => !excludeKeys.includes(theme.key));
+  }
+  if (candidates.length === 0) {
+    candidates = THEMES;
   }
 
   return pickRandom(candidates);
@@ -139,11 +145,12 @@ async function buildAiContent(theme: Theme): Promise<{ descriptionImage: string;
 }
 
 /**
- * Sélectionne le thème du jour puis génère la description d'image et la
- * légende finale, selon CONTENT_MODE ("template" par défaut, ou "ai").
+ * Sélectionne un thème puis génère la description d'image et la légende
+ * finale, selon CONTENT_MODE ("template" par défaut, ou "ai"). `excludeKeys`
+ * permet d'éviter les thèmes déjà utilisés plus tôt dans le run en cours.
  */
-export async function describeToday(): Promise<DailyContent> {
-  const theme = await selectDailyTheme();
+export async function describeToday(excludeKeys: string[] = []): Promise<DailyContent> {
+  const theme = await selectDailyTheme(excludeKeys);
   const mode = (process.env.CONTENT_MODE || "template").toLowerCase();
 
   const { descriptionImage, legende } =
