@@ -14,7 +14,9 @@
     "dev:post": "ts-node src/index.ts",
     "dev:post:dry-run": "ts-node src/index.ts --dry-run",
     "analyse-image": "node dist/library/index.js",
-    "dev:analyse-image": "ts-node src/library/index.ts"
+    "dev:analyse-image": "ts-node src/library/index.ts",
+    "bibliotheque": "node dist/library/viewer.js",
+    "dev:bibliotheque": "ts-node src/library/viewer.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

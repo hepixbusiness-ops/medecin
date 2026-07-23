@@ -62,6 +62,26 @@ export async function listRecentRecords(limit = 200): Promise<LibraryRecord[]> {
   return data.records;
 }
 
+/** Renvoie TOUS les enregistrements (pagination automatique), du plus récent au plus ancien. */
+export async function listAllRecords(): Promise<LibraryRecord[]> {
+  const records: LibraryRecord[] = [];
+  let offset: string | undefined;
+
+  do {
+    const params = new URLSearchParams({
+      "sort[0][field]": "Date de creation",
+      "sort[0][direction]": "desc",
+    });
+    if (offset) params.set("offset", offset);
+
+    const data = await apiRequest<{ records: LibraryRecord[]; offset?: string }>(`?${params.toString()}`);
+    records.push(...data.records);
+    offset = data.offset;
+  } while (offset);
+
+  return records;
+}
+
 /** Crée un nouvel enregistrement de publication (sans l'image, ajoutée séparément via uploadImageAttachment). */
 export async function createRecord(fields: Record<string, unknown>): Promise<LibraryRecord> {
   const data = await apiRequest<{ records: LibraryRecord[] }>("", {

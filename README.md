@@ -284,6 +284,31 @@ bloquer la création — l'enregistrement est quand même créé, marqué comme
 doublon pour que tu tranches toi-même), puis crée l'enregistrement Airtable
 avec l'image en pièce jointe.
 
+### Visionneuse (npm run bibliotheque)
+
+Génère une page HTML locale et autonome à partir de **toutes** les
+publications de la bibliothèque : une carte par publication, avec l'image,
+des onglets par réseau (Facebook/Instagram/TikTok/LinkedIn/YouTube) affichant
+la légende correspondante, un bouton **"Copier la légende"**, un bouton
+**"Télécharger l'image"**, et un bouton **"Ouvrir {réseau}"** qui ouvre le
+réseau visé dans un nouvel onglet.
+
+⚠️ Aucun réseau social ne permet de pré-remplir automatiquement une
+publication depuis un lien externe (mesure anti-spam) — le "Ouvrir" amène sur
+le réseau, à toi de coller la légende copiée et d'attacher l'image
+téléchargée. C'est un gain de temps (3 clics + 1 collage), pas une
+publication 100% automatique.
+
+```bash
+npm run build
+npm run bibliotheque
+```
+
+Le fichier généré (`tmp/bibliotheque.html`) s'ouvre directement dans un
+navigateur. Filtre par métier, par statut, ou recherche du texte en haut de
+la page. Régénère-le après chaque `npm run analyse-image` pour voir les
+nouvelles publications.
+
 ## Dépannage
 
 - **`FB_PAGE_ACCESS_TOKEN est invalide ou expiré`** : régénère un token (voir
