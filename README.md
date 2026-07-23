@@ -18,6 +18,7 @@ une légende en français, avec rotation des thèmes sans répétition récente.
 - [Exécution locale](#exécution-locale)
 - [Configuration GitHub Secrets](#configuration-github-secrets)
 - [Planification](#planification)
+- [Bibliothèque marketing (npm run analyse-image)](#bibliothèque-marketing-npm-run-analyse-image)
 - [Dépannage](#dépannage)
 
 ## Architecture
@@ -240,6 +241,48 @@ Puis ajoute au crontab (`crontab -e`) :
 
 Assure-toi que les variables d'environnement (`.env`) sont présentes dans le
 répertoire du projet, ou exportées dans l'environnement du cron.
+
+## Bibliothèque marketing (npm run analyse-image)
+
+Outil **indépendant** de l'auto-poster : il ne publie rien et ne programme
+aucune diffusion. Il analyse une image marketing (via la vision d'Anthropic)
+et crée un enregistrement complet et classé dans une base Airtable dédiée
+("ProRDV Bibliothèque Marketing", table "Publications"), pour que tu choisisses
+ensuite toi-même quoi diffuser, où et quand.
+
+Pour chaque image, l'outil génère automatiquement : titre, accroche,
+description adaptée à chaque réseau (Facebook, Instagram, TikTok, LinkedIn,
+YouTube), CTA, hashtags, mots-clés, résumé, texte alternatif SEO, ainsi que le
+classement (métier, fonctionnalité ProRDV, catégorie marketing, objectif,
+format, style graphique, couleur dominante), un contrôle de conformité à la
+charte graphique (logo, couleur, lisibilité) et une détection de doublon par
+rapport aux publications déjà en base.
+
+### Configuration
+
+En plus de `AIRTABLE_API_KEY` et `ANTHROPIC_API_KEY` déjà utilisées ailleurs,
+renseigne dans `.env` :
+- `LIBRARY_AIRTABLE_BASE_ID` (déjà rempli dans `.env.example` avec la base
+  créée pour ce projet)
+- `LIBRARY_AIRTABLE_TABLE_NAME` (optionnel, défaut `Publications`)
+
+⚠️ Le token `AIRTABLE_API_KEY` doit avoir accès à **cette base aussi** (pas
+seulement à celle de l'auto-poster) : ajoute-la dans "Access" sur la page du
+token, comme pour la base `Facebook Posts` (voir section Airtable plus haut).
+
+### Utilisation
+
+```bash
+npm run build
+npm run analyse-image -- chemin/vers/mon-visuel.png
+```
+
+Ou en local sans compiler : `npm run dev:analyse-image -- chemin/vers/image.png`
+
+L'outil affiche sa progression, signale un éventuel doublon détecté (sans
+bloquer la création — l'enregistrement est quand même créé, marqué comme
+doublon pour que tu tranches toi-même), puis crée l'enregistrement Airtable
+avec l'image en pièce jointe.
 
 ## Dépannage
 
