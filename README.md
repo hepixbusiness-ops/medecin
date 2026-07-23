@@ -260,8 +260,9 @@ rapport aux publications déjà en base.
 
 ### Configuration
 
-En plus de `AIRTABLE_API_KEY` et `ANTHROPIC_API_KEY` déjà utilisées ailleurs,
-renseigne dans `.env` :
+En plus de `AIRTABLE_API_KEY` déjà utilisée ailleurs, renseigne dans `.env` :
+- `OPENAI_API_KEY` (analyse d'image par vision, clé OpenAI — console.openai.com)
+- `OPENAI_MODEL` (optionnel, défaut `gpt-4o`)
 - `LIBRARY_AIRTABLE_BASE_ID` (déjà rempli dans `.env.example` avec la base
   créée pour ce projet)
 - `LIBRARY_AIRTABLE_TABLE_NAME` (optionnel, défaut `Publications`)
@@ -288,10 +289,11 @@ avec l'image en pièce jointe.
 
 Si tu ne veux pas installer Node.js ni configurer de `.env` local, le workflow
 **"Bibliothèque marketing"** fait tout depuis GitHub, avec les secrets déjà
-configurés (`ANTHROPIC_API_KEY`, `AIRTABLE_API_KEY`...) :
+configurés (`AIRTABLE_API_KEY`...) :
 
-1. Ajoute d'abord ces 2 secrets sur GitHub (en plus de ceux déjà en place) :
+1. Ajoute d'abord ces secrets sur GitHub (en plus de ceux déjà en place) :
    **https://github.com/hepixbusiness-ops/medecin/settings/secrets/actions**
+   - `OPENAI_API_KEY` = ta clé API OpenAI (console.openai.com → API keys)
    - `LIBRARY_AIRTABLE_BASE_ID` = `appVBgErIQCQZZgIm`
    - `LIBRARY_AIRTABLE_TABLE_NAME` = `Publications` (optionnel)
 2. Va sur **https://github.com/hepixbusiness-ops/medecin/actions/workflows/library.yml**

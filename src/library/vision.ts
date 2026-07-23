@@ -105,40 +105,40 @@ Réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant/après, aucun b
 Ne laisse jamais un champ vide. Si une information n'est pas visible dans l'image, indique-le explicitement dans le champ concerné (ex: "Aucun CTA visible sur l'image") plutôt que d'inventer un contenu qui n'y figure pas.
 `.trim();
 
-/** Analyse une image via l'API Anthropic (vision) et renvoie une structure prête pour Airtable. */
+/** Analyse une image via l'API OpenAI (vision) et renvoie une structure prête pour Airtable. */
 export async function analyserImage(filePath: string): Promise<AnalyseImage> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("La bibliothèque marketing requiert la variable d'environnement ANTHROPIC_API_KEY.");
+    throw new Error("La bibliothèque marketing requiert la variable d'environnement OPENAI_API_KEY.");
   }
 
   const mediaType = detectMediaType(filePath);
   const imageBuffer = await fs.readFile(filePath);
   const base64Image = imageBuffer.toString("base64");
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
+  const model = process.env.OPENAI_MODEL || "gpt-4o";
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model,
       max_tokens: 2000,
-      system: SYSTEM_PROMPT,
+      response_format: { type: "json_object" },
       messages: [
+        { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
           content: [
             {
-              type: "image",
-              source: { type: "base64", media_type: mediaType, data: base64Image },
-            },
-            {
               type: "text",
               text: "Analyse cette image et renvoie l'objet JSON demandé, rien d'autre.",
+            },
+            {
+              type: "image_url",
+              image_url: { url: `data:${mediaType};base64,${base64Image}` },
             },
           ],
         },
@@ -148,16 +148,16 @@ export async function analyserImage(filePath: string): Promise<AnalyseImage> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Appel à l'API Anthropic (vision) échoué (${response.status}) : ${errorText}`);
+    throw new Error(`Appel à l'API OpenAI (vision) échoué (${response.status}) : ${errorText}`);
   }
 
   const data = (await response.json()) as {
-    content?: Array<{ type: string; text?: string }>;
+    choices?: Array<{ message?: { content?: string } }>;
   };
 
-  const rawText = data.content?.find((block) => block.type === "text")?.text?.trim();
+  const rawText = data.choices?.[0]?.message?.content?.trim();
   if (!rawText) {
-    throw new Error("Réponse de l'API Anthropic (vision) vide ou invalide.");
+    throw new Error("Réponse de l'API OpenAI (vision) vide ou invalide.");
   }
 
   const jsonText = extractJson(rawText);
@@ -165,7 +165,7 @@ export async function analyserImage(filePath: string): Promise<AnalyseImage> {
   try {
     parsed = JSON.parse(jsonText);
   } catch {
-    throw new Error(`Réponse de l'API Anthropic non-JSON : ${rawText.slice(0, 300)}`);
+    throw new Error(`Réponse de l'API OpenAI non-JSON : ${rawText.slice(0, 300)}`);
   }
 
   return normaliser(parsed);
