@@ -284,6 +284,25 @@ bloquer la création — l'enregistrement est quand même créé, marqué comme
 doublon pour que tu tranches toi-même), puis crée l'enregistrement Airtable
 avec l'image en pièce jointe.
 
+### Sans rien installer sur ton PC (GitHub Actions)
+
+Si tu ne veux pas installer Node.js ni configurer de `.env` local, le workflow
+**"Bibliothèque marketing"** fait tout depuis GitHub, avec les secrets déjà
+configurés (`ANTHROPIC_API_KEY`, `AIRTABLE_API_KEY`...) :
+
+1. Ajoute d'abord ces 2 secrets sur GitHub (en plus de ceux déjà en place) :
+   **https://github.com/hepixbusiness-ops/medecin/settings/secrets/actions**
+   - `LIBRARY_AIRTABLE_BASE_ID` = `appVBgErIQCQZZgIm`
+   - `LIBRARY_AIRTABLE_TABLE_NAME` = `Publications` (optionnel)
+2. Va sur **https://github.com/hepixbusiness-ops/medecin/actions/workflows/library.yml**
+3. Clique **"Run workflow"** → laisse le champ "dossier" sur `assets/banque`
+   (analyse toutes les images de ce dossier, ignore automatiquement celles
+   déjà analysées lors d'un run précédent) → **"Run workflow"**.
+4. Attends la fin du run (1-3 minutes selon le nombre d'images).
+5. Sur la page du run terminé, en bas, télécharge l'artefact **"bibliotheque"**
+   (fichier zip) → décompresse-le → ouvre `bibliotheque.html` dans ton
+   navigateur.
+
 ### Visionneuse (npm run bibliotheque)
 
 Génère une page HTML locale et autonome à partir de **toutes** les
