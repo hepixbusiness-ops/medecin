@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #eef0ea;
+  --surface: #f7f8f4;
+  --surface-2: #ffffff;
+  --ink: #16211c;
+  --ink-soft: #3c463f;
+  --rail-bg: #16211c;
+  --rail-text: #eef0ea;
+  --rail-text-soft: #a9b3ac;
+  --accent: #0f6b57;
+  --accent-strong: #0b5344;
+  --accent-soft: #dcebe6;
+  --border: #d8dbcf;
+  --border-soft: #e3e5da;
+  --danger: #b3402f;
+  --danger-soft: #f6e4e0;
+
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --color-bg-base: var(--bg-base);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rail-bg: var(--rail-bg);
+  --color-rail-text: var(--rail-text);
+  --color-rail-text-soft: var(--rail-text-soft);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --animate-draw-check: draw-check 0.6s var(--ease-editorial) forwards;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--ink);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--rail-text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  .h1-clamp {
+    font-size: clamp(2rem, 1.6rem + 2vw, 3.25rem);
+    line-height: 1.05;
+  }
+
+  .h2-clamp {
+    font-size: clamp(1.375rem, 1.2rem + 0.9vw, 1.875rem);
+    line-height: 1.15;
+  }
+
+  .label-mono {
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
