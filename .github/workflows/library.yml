@@ -1,0 +1,54 @@
+name: Bibliothèque marketing
+
+on:
+  workflow_dispatch:
+    inputs:
+      dossier:
+        description: "Dossier ou fichier image à analyser"
+        required: false
+        default: "assets/banque"
+
+jobs:
+  build-library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Compilation TypeScript
+        run: npm run build
+
+      - name: Analyse des images (Anthropic vision → Airtable)
+        run: npm run analyse-image -- "${{ github.event.inputs.dossier }}"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          LIBRARY_AIRTABLE_BASE_ID: ${{ secrets.LIBRARY_AIRTABLE_BASE_ID }}
+          LIBRARY_AIRTABLE_TABLE_NAME: ${{ secrets.LIBRARY_AIRTABLE_TABLE_NAME }}
+          LIBRARY_AUTHOR: ${{ secrets.LIBRARY_AUTHOR }}
+
+      - name: Génération de la page de visualisation
+        run: npm run bibliotheque
+        env:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          LIBRARY_AIRTABLE_BASE_ID: ${{ secrets.LIBRARY_AIRTABLE_BASE_ID }}
+          LIBRARY_AIRTABLE_TABLE_NAME: ${{ secrets.LIBRARY_AIRTABLE_TABLE_NAME }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+
+      - name: Publication du fichier à télécharger
+        uses: actions/upload-artifact@v4
+        with:
+          name: bibliotheque
+          path: tmp/bibliotheque.html
+          retention-days: 30
